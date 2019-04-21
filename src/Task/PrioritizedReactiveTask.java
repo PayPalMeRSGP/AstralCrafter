@@ -103,11 +103,12 @@ public abstract class PrioritizedReactiveTask extends MethodProvider implements 
             @Override
             public void run() {
                 try {
-                    log("Starting task" );
+                    log("Starting task: " + getClassName());
                     task();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } finally {
+                    log("Finished task: " + getClassName());
                     canRunTaskThread.set(false);
                 }
             }
@@ -155,4 +156,6 @@ public abstract class PrioritizedReactiveTask extends MethodProvider implements 
     public void setTaskEnqueuedToFalse() {
         this.taskEnqueued.set(false);
     }
+
+    abstract String getClassName();
 }

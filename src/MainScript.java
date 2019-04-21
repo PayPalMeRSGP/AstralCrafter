@@ -9,7 +9,7 @@ import java.util.Queue;
 @ScriptManifest(author = "PayPalMeRSGP", name = MainScript.SCRIPT_NAME, info = "Astral Runecrafting", version = 0.5, logo = "")
 public class MainScript extends Script {
     private long mainThreadID = Thread.currentThread().getId();
-    static final String SCRIPT_NAME = "Astral_Crafter v0.02";
+    static final String SCRIPT_NAME = "Astral_Crafter v0.05";
     private Queue<PrioritizedReactiveTask> taskQ;
 
     @Override
@@ -27,7 +27,7 @@ public class MainScript extends Script {
             PrioritizedReactiveTask currentTask = taskQ.poll();
             currentTask.setTaskEnqueuedToFalse();
             currentTask.startTaskRunnerThread();
-            log("Thread " + mainThreadID + " awaiting task " + currentTask.getClass().getSimpleName() + " to finish.");
+
             while(currentTask.isTaskRunning()) {
                 PrioritizedReactiveTask peeked = taskQ.peek();
                 //interrupt the current task if one of greater priority is enqueued
