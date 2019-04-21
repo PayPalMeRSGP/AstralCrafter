@@ -25,8 +25,8 @@ public abstract class PrioritizedReactiveTask extends MethodProvider implements 
     private static Set<PrioritizedReactiveTask> activeTasks; //used to store all initialized threads to later kill all threads. ex: onStop()
 
     private volatile AtomicBoolean taskEnqueued = new AtomicBoolean(false); //Task instances should be singleton in the PQ. ex: Only 1 instance of FishingTask can be in the PQ at any time.
-    private volatile AtomicBoolean runEnqueueTaskThread = new AtomicBoolean(false); //flag used to stop the thread that checks whether the task should be enqueued.
-    volatile AtomicBoolean runTaskThread = new AtomicBoolean(false); //onloop sets this to false thread if it wants to stop execution of the task. This is usually followed by a switch to a higher priority task
+    private volatile AtomicBoolean canRunEnqueueTaskThread = new AtomicBoolean(false); //flag used to stop the thread that checks whether the task should be enqueued.
+    private volatile AtomicBoolean canRunTaskThread = new AtomicBoolean(false); //onloop sets this to false thread if it wants to stop execution of the task. This is usually followed by a switch to a higher priority task
 
     PrioritizedReactiveTask(Bot bot) {
         exchangeContext(bot);
@@ -44,8 +44,8 @@ public abstract class PrioritizedReactiveTask extends MethodProvider implements 
     public static void onStopCleanUp() {
         for(PrioritizedReactiveTask task: activeTasks) {
             task.stopTask();
-            if(task.runEnqueueTaskThread != null)
-                task.runEnqueueTaskThread.set(false);
+            if(task.canRunEnqueueTaskThread != null)
+                task.canRunEnqueueTaskThread.set(false);
         }
         taskQueue = null;
         activeTasks = null;
@@ -67,15 +67,15 @@ public abstract class PrioritizedReactiveTask extends MethodProvider implements 
         new Thread(new Runnable() {
             @Override
             public void run() {
-                runEnqueueTaskThread.set(true);
-                while(runEnqueueTaskThread.get()) {
+                canRunEnqueueTaskThread.set(true);
+                while(canRunEnqueueTaskThread.get()) {
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
 
-                    if(taskEnqueued.get() || runTaskThread.get()) { //do not enqueue the task if said task is already enqueued or is already running.
+                    if(taskEnqueued.get() || canRunTaskThread.get()) { //do not enqueue the task if an instance of that task is already enqueued or running.
                         continue;
                         //log(PrioritizedReactiveTask.this.getClass().getSimpleName() + " already in queue or is currently executing");
                     } else if(shouldTaskActivate()) {
@@ -98,16 +98,17 @@ public abstract class PrioritizedReactiveTask extends MethodProvider implements 
      * Starts the thread that executes the task
      */
     public void startTaskRunnerThread() {
-        runTaskThread.set(true);
+        canRunTaskThread.set(true);
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
+                    log("Starting task" );
                     task();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } finally {
-                    runTaskThread.set(false);
+                    canRunTaskThread.set(false);
                 }
             }
         }).start();
@@ -117,16 +118,16 @@ public abstract class PrioritizedReactiveTask extends MethodProvider implements 
      * Stops the above ^^^ Thread
      */
     public void stopTask() {
-        if(runTaskThread != null)
-            runTaskThread.set(false);
+        if(canRunTaskThread != null)
+            canRunTaskThread.set(false);
     }
 
     /**
      * Subclasses implement the task directions to execute
      * Inorder to have immediate task interruption on enqueueing of higher priority task
-     * each step ought to check for runTaskThread==true and return if false
+     * each step ought to check for canRunTaskThread==true and return if false
      */
-    abstract void task() throws InterruptedException;
+    public abstract void task() throws InterruptedException;
 
     /**
      * Subclasses implement when the task should execute
@@ -144,7 +145,7 @@ public abstract class PrioritizedReactiveTask extends MethodProvider implements 
     }
 
     public boolean isTaskRunning() {
-        return runTaskThread.get();
+        return canRunTaskThread.get();
     }
 
     public Priority getPriority() {
