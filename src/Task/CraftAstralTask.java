@@ -30,7 +30,7 @@ public class CraftAstralTask extends PrioritizedReactiveTask {
                 astralAltar[0] = objects.closest(new Area(2155, 3867, 2161, 3861), "Altar");
                 if(astralAltar[0] != null) {
                     distanceToAltar[0] = map.distance(astralAltar[0]);
-                    return distanceToAltar[0] < 10;
+                    return distanceToAltar[0] < 7;
                 }
                 return false;
             }
@@ -43,7 +43,13 @@ public class CraftAstralTask extends PrioritizedReactiveTask {
             }
 
             if(astralAltar[0] != null) {
-                if(astralAltar[0].interact("Craft-rune")) {
+                boolean alterInteraction = new ConditionalSleep(2000) {
+                    @Override
+                    public boolean condition() throws InterruptedException {
+                        return astralAltar[0].interact("Craft-rune");
+                    }
+                }.sleep();
+                if(alterInteraction) {
                     new ConditionalSleep(5000) {
                         @Override
                         public boolean condition() throws InterruptedException {
@@ -51,7 +57,7 @@ public class CraftAstralTask extends PrioritizedReactiveTask {
                         }
                     }.sleep();
                 } else {
-                    log("cannot interact");
+                    log("cannot interact with alter will retry");
                 }
             }
         }

@@ -9,7 +9,7 @@ import java.util.Queue;
 @ScriptManifest(author = "PayPalMeRSGP", name = MainScript.SCRIPT_NAME, info = "Astral Runecrafting", version = 0.5, logo = "")
 public class MainScript extends Script {
     private long mainThreadID = Thread.currentThread().getId();
-    static final String SCRIPT_NAME = "Astral_Crafter v0.05";
+    static final String SCRIPT_NAME = "Astral_Crafter v0.07";
     private Queue<PrioritizedReactiveTask> taskQ;
 
     @Override
@@ -40,4 +40,18 @@ public class MainScript extends Script {
 
         return 1000;
     }
+
+    @Override
+    public void pause() {
+        super.pause();
+        PrioritizedReactiveTask.onPauseCleanUp();
+    }
+
+    @Override
+    public void onExit() throws InterruptedException {
+        super.onExit();
+        PrioritizedReactiveTask.onStopCleanUp();
+    }
+
+
 }
