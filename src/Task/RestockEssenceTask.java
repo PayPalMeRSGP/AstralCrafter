@@ -18,7 +18,6 @@ import java.util.concurrent.locks.Condition;
 public class RestockEssenceTask extends PrioritizedReactiveTask {
 
     private static final Area MOONCLAN_ISLAND = new Area(2088, 3927, 2118, 3907);
-    private static final Area MOONCLAN_BANK = new Area(2097, 3919, 2100, 3918);
 
     public RestockEssenceTask(Bot bot) {
         super(bot);
@@ -31,26 +30,23 @@ public class RestockEssenceTask extends PrioritizedReactiveTask {
         if(MOONCLAN_ISLAND.contains(myPosition())) {
             canWalkToBank = true;
         }
-        else if(magic.canCast(Spells.LunarSpells.TELE_GROUP_MOONCLAN)) {
-            if(magic.castSpell(Spells.LunarSpells.TELE_GROUP_MOONCLAN)) {
-                canWalkToBank = new ConditionalSleep(3000) {
-                    @Override
-                    public boolean condition() throws InterruptedException {
-                        return MOONCLAN_ISLAND.contains(myPosition());
-                    }
-                }.sleep();
-            }
+        else if(magic.canCast(Spells.LunarSpells.TELE_GROUP_MOONCLAN) && magic.castSpell(Spells.LunarSpells.TELE_GROUP_MOONCLAN)) {
+            canWalkToBank = new ConditionalSleep(5000, 500) {
+                @Override
+                public boolean condition() {
+                    return MOONCLAN_ISLAND.contains(myPosition());
+                }
+            }.sleep();
         }
 
         if(canWalkToBank) {
             if(openBankNoCamera()) {
-                log("bank has been opened");
                 final String PURE_ESS = "Pure essence";
                 if(bank.getAmount(PURE_ESS) > 28) {
                     if(bank.withdraw(PURE_ESS, Bank.WITHDRAW_ALL)) {
                         new ConditionalSleep(5000) {
                             @Override
-                            public boolean condition() throws InterruptedException {
+                            public boolean condition() {
                                 return inventory.contains("Pure essence");
                             }
                         }.sleep();
@@ -64,7 +60,7 @@ public class RestockEssenceTask extends PrioritizedReactiveTask {
 
     @Override
     boolean shouldTaskActivate() {
-        return !inventory.contains("Pure essence");
+        return !inventory.contains("Pure essence") && settings.getRunEnergy() >= 20;
     }
 
     @Override
@@ -79,17 +75,15 @@ public class RestockEssenceTask extends PrioritizedReactiveTask {
                 .findFirst().orElse(null);
         InteractionEvent bankInteraction = null;
         if(bankBoothObj != null) {
-            log("found bank, setting up interaction event");
             bankInteraction = new InteractionEvent(bankBoothObj);
             bankInteraction.setOperateCamera(false);
 
         }
         if(bankInteraction != null) {
-            log("executing interaction event");
             execute(bankInteraction);
             boolean opened = new ConditionalSleep(2000) {
                 @Override
-                public boolean condition() throws InterruptedException {
+                public boolean condition() {
                     return bank.isOpen();
                 }
             }.sleep();
