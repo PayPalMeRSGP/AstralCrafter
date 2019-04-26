@@ -15,14 +15,28 @@ public class POHDetourTask extends PrioritizedReactiveTask {
 
     @Override
     public void task() throws InterruptedException {
-        if (inventory.contains("Teleport to house")) {
-            if(inventory.interact("break", "Teleport to house")) {
-                if(usePOHPool() && useLunarPortal()) {
-                    log("Completed POH detour successful");
-                } else {
-                    log("POH detour unsuccessful");
+        if (objects.closest("Portal") != null
+                || inventory.contains("Teleport to house")
+                && inventory.interact("break", "Teleport to house")) {
+            if(usePOHPool()) {
+                settings.setRunning(true);
+                log("restored stats with pool");
+                if(useLunarPortal()) {
+                    log("used lunar portal");
+                    boolean atLunarIsland = new ConditionalSleep(5000, 500) {
+                        @Override
+                        public boolean condition() {
+                            return npcs.closest("Rimae Sirsalis") != null;
+                        }
+                    }.sleep();
+                    if(atLunarIsland) {
+                        log("POH detour successful");
+                        return;
+                    }
                 }
             }
+            log("POH detour unsuccessful");
+
         } else {
             log("Stop Condition -> no house teleports");
             bot.getScriptExecutor().stop(false);
@@ -34,9 +48,9 @@ public class POHDetourTask extends PrioritizedReactiveTask {
             return true; //if this task runs again and player is healthy, allow this interaction to be skipped
         }
         final RS2Object[] pohPool = new RS2Object[1];
-        boolean poolFound = new ConditionalSleep(5000) {
+        boolean poolFound = new ConditionalSleep(8000, 500) {
             @Override
-            public boolean condition() throws InterruptedException {
+            public boolean condition() {
                 pohPool[0] = objects.closest("Ornate rejuvenation pool",
                         "Fancy rejuvenation pool",
                         "Rejuvenation pool",
@@ -51,8 +65,8 @@ public class POHDetourTask extends PrioritizedReactiveTask {
             execute(poolInteraction);
             boolean restored = new ConditionalSleep(2000) {
                 @Override
-                public boolean condition() throws InterruptedException {
-                    return false;
+                public boolean condition() {
+                    return settings.getRunEnergy() >= 99;
                 }
             }.sleep();
             return restored || pohPool[0].interact();
@@ -65,17 +79,17 @@ public class POHDetourTask extends PrioritizedReactiveTask {
         final RS2Object[] lunarPortal = new RS2Object[1];
         boolean portalFound = new ConditionalSleep(5000) {
             @Override
-            public boolean condition() throws InterruptedException {
-                lunarPortal[0] = objects.closest("???"); //TODO: set
+            public boolean condition() {
+                lunarPortal[0] = objects.closest("Lunar Isle Portal"); //TODO: set
                 return lunarPortal[0] != null;
             }
         }.sleep();
 
         if(portalFound) {
-            InteractionEvent poolInteraction = new InteractionEvent(lunarPortal[0]);
-            poolInteraction.setOperateCamera(false);
-            execute(poolInteraction);
-            return poolInteraction.hasFinished() || lunarPortal[0].interact();
+            InteractionEvent portalInteraction = new InteractionEvent(lunarPortal[0]);
+            portalInteraction.setOperateCamera(false);
+            execute(portalInteraction);
+            return portalInteraction.hasFinished() || lunarPortal[0].interact();
         }
         log("WARN: unable to use portal, will retry soon.");
         return false;
@@ -88,6 +102,6 @@ public class POHDetourTask extends PrioritizedReactiveTask {
 
     @Override
     String getClassName() {
-        return null;
+        return "POHDetourTask";
     }
 }

@@ -1,15 +1,17 @@
 import Task.CraftAstralTask;
+import Task.POHDetourTask;
 import Task.PrioritizedReactiveTask;
 import Task.RestockEssenceTask;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.script.ScriptManifest;
 
-import java.util.Queue;
+import java.util.*;
 
 @ScriptManifest(author = "PayPalMeRSGP", name = MainScript.SCRIPT_NAME, info = "Astral Runecrafting", version = 0.5, logo = "")
 public class MainScript extends Script {
+
     private long mainThreadID = Thread.currentThread().getId();
-    static final String SCRIPT_NAME = "Astral_Crafter v0.07";
+    static final String SCRIPT_NAME = "Astral_Crafter v0.16";
     private Queue<PrioritizedReactiveTask> taskQ;
 
     @Override
@@ -19,10 +21,11 @@ public class MainScript extends Script {
 
         new CraftAstralTask(bot).startTaskTriggerCheckerThread();
         new RestockEssenceTask(bot).startTaskTriggerCheckerThread();
+        new POHDetourTask(bot).startTaskTriggerCheckerThread();
     }
 
     @Override
-    public int onLoop() throws InterruptedException {
+    public int onLoop() {
         if(!taskQ.isEmpty()) {
             PrioritizedReactiveTask currentTask = taskQ.poll();
             currentTask.setTaskEnqueuedToFalse();
@@ -37,7 +40,6 @@ public class MainScript extends Script {
             }
             // log("Finished task: " + currentTask.getClass().getSimpleName());
         }
-
         return 1000;
     }
 
