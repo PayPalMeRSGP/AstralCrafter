@@ -6,16 +6,15 @@ import org.osbot.rs07.api.ui.Skill;
 import org.osbot.rs07.event.InteractionEvent;
 import org.osbot.rs07.utility.ConditionalSleep;
 
-public class POHDetourTask extends PrioritizedReactiveTask {
+public class POHDetourTask extends ReactiveTask {
 
     public POHDetourTask(Bot bot) {
         super(bot);
-        this.priority = Priority.NORMAL;
     }
 
     @Override
     public void task() throws InterruptedException {
-        if (objects.closest("Portal") != null
+        if (objects.closest("Portal") == null
                 || inventory.contains("Teleport to house")
                 && inventory.interact("break", "Teleport to house")) {
             if(usePOHPool()) {
@@ -63,7 +62,7 @@ public class POHDetourTask extends PrioritizedReactiveTask {
             InteractionEvent poolInteraction = new InteractionEvent(pohPool[0]);
             poolInteraction.setOperateCamera(false);
             execute(poolInteraction);
-            boolean restored = new ConditionalSleep(2000) {
+            boolean restored = new ConditionalSleep(5000) {
                 @Override
                 public boolean condition() {
                     return settings.getRunEnergy() >= 99;
@@ -96,12 +95,17 @@ public class POHDetourTask extends PrioritizedReactiveTask {
     }
 
     @Override
-    boolean shouldTaskActivate() {
+    boolean shouldEnqueue() throws InterruptedException {
+        Thread.sleep(ENQUEUE_POLLING_INTERVAL_MS);
+        if(!inventory.contains("Teleport to house")) {
+            this.canRunEnqueueTaskThread.set(false);
+            return false;
+        }
         return !inventory.contains("Pure essence") && settings.getRunEnergy() < 20;
     }
 
     @Override
-    String getClassName() {
+    public String getClassName() {
         return "POHDetourTask";
     }
 }
