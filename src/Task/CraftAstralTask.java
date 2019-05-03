@@ -3,18 +3,21 @@ package Task;
 import org.osbot.rs07.Bot;
 import org.osbot.rs07.api.map.Area;
 import org.osbot.rs07.api.map.Position;
+import org.osbot.rs07.api.model.Item;
 import org.osbot.rs07.api.model.RS2Object;
-import org.osbot.rs07.api.ui.Spells;
+import org.osbot.rs07.api.ui.Tab;
+import org.osbot.rs07.event.InteractionEvent;
 import org.osbot.rs07.event.WalkingEvent;
-import org.osbot.rs07.event.WebWalkEvent;
-import org.osbot.rs07.utility.Condition;
+import org.osbot.rs07.input.keyboard.TypeKeyEvent;
+import org.osbot.rs07.input.mouse.InventorySlotDestination;
 import org.osbot.rs07.utility.ConditionalSleep;
 
+import java.awt.event.KeyEvent;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class CraftAstralTask extends PrioritizedReactiveTask {
+public class CraftAstralTask extends ReactiveTask {
 
     private static final LinkedList<Position> PATH1 = new LinkedList<>(Arrays.asList(
             new Position(2104, 3915, 0),
@@ -50,14 +53,24 @@ public class CraftAstralTask extends PrioritizedReactiveTask {
             new Position(2153, 3863, 0)
     ));
 
+    private final Runnable asyncPressF2Key = () -> {
+        try {
+            sleep(randomNormalDist(8000, 3000));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        if (keyboard.typeFKey(KeyEvent.VK_F2)) {
+            log("Thread " + Thread.currentThread().getId() + " pressed F2 Key");
+        }
+    };
+
     public CraftAstralTask(Bot bot) {
         super(bot);
-        this.priority = Priority.NORMAL;
     }
 
     @Override
     public void task() throws InterruptedException {
-        final RS2Object[] astralAltar = new RS2Object[1];
+
         WalkingEvent astralAltarWalkEvent = new WalkingEvent();
         if(ThreadLocalRandom.current().nextBoolean()) {
             astralAltarWalkEvent.setPath(PATH1);
@@ -66,44 +79,91 @@ public class CraftAstralTask extends PrioritizedReactiveTask {
         }
 
         astralAltarWalkEvent.setMinDistanceThreshold(5);
+        astralAltarWalkEvent.setOperateCamera(false);
+
+        new Thread(asyncPressF2Key).start();
         execute(astralAltarWalkEvent);
 
         if(astralAltarWalkEvent.hasFinished()) {
-            if(astralAltar[0] == null) {
-                astralAltar[0] = objects.closest(new Area(2155, 3867, 2161, 3861), "Altar");
-            }
-
-            if(astralAltar[0] != null) {
-                boolean alterInteraction = new ConditionalSleep(2000) {
-                    @Override
-                    public boolean condition() {
-                        return astralAltar[0].interact("Craft-rune");
-                    }
-                }.sleep();
-                if(alterInteraction) {
-                    if(settings.getRunEnergy() >= 20) {
-                        magic.hoverSpell(Spells.LunarSpells.TELE_GROUP_MOONCLAN);
-                    }
-                    new ConditionalSleep(5000) {
-                        @Override
-                        public boolean condition() {
-                            return !inventory.contains("Pure essence") && myPlayer().getAnimation() != 791;
-                        }
-                    }.sleep();
-                } else {
-                    log("cannot interact with alter will retry");
+            RS2Object astralAltar = objects.closest(new Area(2155, 3867, 2161, 3861), "Altar");
+            if(astralAltar != null && altarInteraction(astralAltar)) {
+                log("altar interaction complete");
+                if(tabs.open(Tab.INVENTORY) && emptyPouches()) {
+                    altarInteraction(astralAltar);
                 }
             }
         }
     }
 
-    @Override
-    boolean shouldTaskActivate() {
+    private boolean altarInteraction(RS2Object altar) {
+        InteractionEvent altarInteraction = new InteractionEvent(altar);
+        altarInteraction.setOperateCamera(false);
+        execute(altarInteraction);
+        if(altarInteraction.hasFinished()) {
+            return new ConditionalSleep(5000) {
+                @Override
+                public boolean condition() {
+                    return !inventory.contains("Pure essence") && myPlayer().getAnimation() != 791;
+                }
+            }.sleep();
+        }
+        return false;
+    }
+
+    private boolean emptyPouches() {
+        Item[] invItems = inventory.getItems();
+        keyboard.pressKey(KeyEvent.VK_SHIFT);
+
+        if(ThreadLocalRandom.current().nextBoolean()) {
+            for(int i = 0; i < invItems.length; i++) {
+                if(invItems[i] != null && invItems[i].nameContains("Small pouch", "Medium pouch", "Large pouch")) {
+                    int emptySlots = inventory.getEmptySlotCount();
+                    if(invItems[i].getName().equals("Small pouch") && emptySlots >= 3) {
+                        mouse.click(new InventorySlotDestination(bot, i));
+                        log("Emptied Small pouch");
+                    }
+                    else if(invItems[i].getName().equals("Medium pouch") && emptySlots >= 6) {
+                        mouse.click(new InventorySlotDestination(bot, i));
+                        log("Emptied Medium pouch");
+                    }
+                    else if(invItems[i].getName().equals("Large pouch") && emptySlots >= 9) {
+                        mouse.click(new InventorySlotDestination(bot, i));
+                        log("Emptied Large pouch");
+                    }
+                }
+            }
+        } else {
+            for(int i = invItems.length - 1; i > -1; i--) {
+                if(invItems[i] != null && invItems[i].nameContains("Small pouch", "Medium pouch", "Large pouch")) {
+                    int emptySlots = inventory.getEmptySlotCount();
+                    if(invItems[i].getName().equals("Small pouch") && emptySlots >= 3) {
+                        mouse.click(new InventorySlotDestination(bot, i));
+                        log("Emptied Small pouch");
+                    }
+                    else if(invItems[i].getName().equals("Medium pouch") && emptySlots >= 6) {
+                        mouse.click(new InventorySlotDestination(bot, i));
+                        log("Emptied Medium pouch");
+                    }
+                    else if(invItems[i].getName().equals("Large pouch") && emptySlots >= 9) {
+                        mouse.click(new InventorySlotDestination(bot, i));
+                        log("Emptied Large pouch");
+                    }
+                }
+            }
+        }
+
+        keyboard.releaseKey(KeyEvent.VK_SHIFT);
         return inventory.contains("Pure essence");
     }
 
     @Override
-    String getClassName() {
+    boolean shouldEnqueue() throws InterruptedException {
+        Thread.sleep(ENQUEUE_POLLING_INTERVAL_MS);
+        return inventory.contains("Pure essence");
+    }
+
+    @Override
+    public String getClassName() {
         return "CraftAstralTask";
     }
 }
