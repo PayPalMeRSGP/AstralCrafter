@@ -52,7 +52,6 @@ public class RepairPouchesTask extends ReactiveTask implements MessageListener {
     @Override
     boolean shouldEnqueue() {
         if(shouldEnqueue || inventory.contains(5513)){
-            log("acknowledged pouch is broken!");
             shouldEnqueue = false;
             return true;
         }

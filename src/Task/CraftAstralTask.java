@@ -13,45 +13,12 @@ import org.osbot.rs07.input.mouse.InventorySlotDestination;
 import org.osbot.rs07.utility.ConditionalSleep;
 
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class CraftAstralTask extends ReactiveTask {
-
-    private static final LinkedList<Position> PATH1 = new LinkedList<>(Arrays.asList(
-            new Position(2104, 3915, 0),
-            new Position(2110, 3915, 0),
-            new Position(2115, 3910, 0),
-            new Position(2115, 3904, 0),
-            new Position(2115, 3898, 0),
-            new Position(2113, 3892, 0),
-            new Position(2114, 3886, 0),
-            new Position(2116, 3880, 0),
-            new Position(2119, 3874, 0),
-            new Position(2126, 3870, 0),
-            new Position(2133, 3867, 0),
-            new Position(2135, 3861, 0),
-            new Position(2142, 3863, 0),
-            new Position(2149, 3863, 0),
-            new Position(2156, 3862, 0)
-    ));
-
-    private static final LinkedList<Position> PATH2 = new LinkedList<>(Arrays.asList(
-            new Position(2102, 3915, 0),
-            new Position(2109, 3915, 0),
-            new Position(2112, 3905, 0),
-            new Position(2112, 3897, 0),
-            new Position(2114, 3889, 0),
-            new Position(2118, 3883, 0),
-            new Position(2123, 3878, 0),
-            new Position(2128, 3873, 0),
-            new Position(2134, 3868, 0),
-            new Position(2135, 3862, 0),
-            new Position(2140, 3860, 0),
-            new Position(2147, 3862, 0),
-            new Position(2153, 3863, 0)
-    ));
 
     private final Runnable asyncPressF2Key = () -> {
         try {
@@ -72,12 +39,9 @@ public class CraftAstralTask extends ReactiveTask {
     public void task() throws InterruptedException {
 
         WalkingEvent astralAltarWalkEvent = new WalkingEvent();
-        if(ThreadLocalRandom.current().nextBoolean()) {
-            astralAltarWalkEvent.setPath(PATH1);
-        } else {
-            astralAltarWalkEvent.setPath(PATH2);
-        }
-
+        int chosenPath = ThreadLocalRandom.current().nextInt(0, PATHS.size());
+        log("using chosenPath: " + chosenPath);
+        astralAltarWalkEvent.setPath(PATHS.get(chosenPath));
         astralAltarWalkEvent.setMinDistanceThreshold(5);
         astralAltarWalkEvent.setOperateCamera(false);
 
@@ -166,4 +130,72 @@ public class CraftAstralTask extends ReactiveTask {
     public String getClassName() {
         return "CraftAstralTask";
     }
+
+    private static final ArrayList<LinkedList<Position>> PATHS = new ArrayList<>(Arrays.asList(
+            new LinkedList<>(Arrays.asList(
+                    new Position(2104, 3915, 0),
+                    new Position(2110, 3915, 0),
+                    new Position(2115, 3910, 0),
+                    new Position(2115, 3904, 0),
+                    new Position(2115, 3898, 0),
+                    new Position(2113, 3892, 0),
+                    new Position(2114, 3886, 0),
+                    new Position(2116, 3880, 0),
+                    new Position(2119, 3874, 0),
+                    new Position(2126, 3870, 0),
+                    new Position(2133, 3867, 0),
+                    new Position(2135, 3861, 0),
+                    new Position(2142, 3863, 0),
+                    new Position(2149, 3863, 0),
+                    new Position(2156, 3862, 0)
+            )),
+            new LinkedList<>(Arrays.asList(
+                    new Position(2102, 3915, 0),
+                    new Position(2109, 3915, 0),
+                    new Position(2112, 3905, 0),
+                    new Position(2112, 3897, 0),
+                    new Position(2114, 3889, 0),
+                    new Position(2118, 3883, 0),
+                    new Position(2123, 3878, 0),
+                    new Position(2128, 3873, 0),
+                    new Position(2134, 3868, 0),
+                    new Position(2135, 3862, 0),
+                    new Position(2140, 3860, 0),
+                    new Position(2147, 3862, 0),
+                    new Position(2153, 3863, 0)
+            )),
+            new LinkedList<>(Arrays.asList(
+                    new Position(2111, 3914, 0),
+                    new Position(2112, 3899, 0),
+                    new Position(2118, 3887, 0),
+                    new Position(2118, 3878, 0),
+                    new Position(2131, 3877, 0),
+                    new Position(2134, 3865, 0),
+                    new Position(2147, 3868, 0),
+                    new Position(2155, 3866, 0)
+            )),//???
+            new LinkedList<>(Arrays.asList(
+                    new Position(2111, 3914, 0),
+                    new Position(2112, 3899, 0),
+                    new Position(2118, 3887, 0),
+                    new Position(2118, 3878, 0),
+                    new Position(2131, 3877, 0),
+                    new Position(2134, 3865, 0),
+                    new Position(2147, 3868, 0),
+                    new Position(2155, 3866, 0)
+            )),
+            new LinkedList<>(Arrays.asList(
+                    new Position(2109, 3915, 0),
+                    new Position(2112, 3905, 0),
+                    new Position(2112, 3892, 0),
+                    new Position(2119, 3886, 0),
+                    new Position(2125, 3879, 0),
+                    new Position(2133, 3873, 0),
+                    new Position(2135, 3863, 0),
+                    new Position(2143, 3859, 0),
+                    new Position(2156, 3863, 0)
+            ))
+
+    ));
+
 }

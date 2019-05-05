@@ -1,4 +1,6 @@
 import Task.*;
+import org.osbot.rs07.api.map.Position;
+import org.osbot.rs07.event.WalkingEvent;
 import org.osbot.rs07.script.Script;
 import org.osbot.rs07.script.ScriptManifest;
 
@@ -6,7 +8,7 @@ import java.util.*;
 
 @ScriptManifest(author = "PayPalMeRSGP", name = MainScript.SCRIPT_NAME, info = "Astral Runecrafting", version = 0.5, logo = "")
 public class MainScript extends Script {
-    static final String SCRIPT_NAME = "Astral_Crafter v0.19";
+    static final String SCRIPT_NAME = "Astral_Crafter v0.21";
     private Queue<ReactiveTask> taskQ;
 
     @Override

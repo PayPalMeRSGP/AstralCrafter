@@ -14,7 +14,7 @@ public class POHDetourTask extends ReactiveTask {
 
     @Override
     public void task() throws InterruptedException {
-        if (objects.closest("Portal") == null
+        if (objects.closest("Portal") != null
                 || inventory.contains("Teleport to house")
                 && inventory.interact("break", "Teleport to house")) {
             if(usePOHPool()) {
@@ -22,7 +22,7 @@ public class POHDetourTask extends ReactiveTask {
                 log("restored stats with pool");
                 if(useLunarPortal()) {
                     log("used lunar portal");
-                    boolean atLunarIsland = new ConditionalSleep(5000, 500) {
+                    boolean atLunarIsland = new ConditionalSleep(15000, 500) {
                         @Override
                         public boolean condition() {
                             return npcs.closest("Rimae Sirsalis") != null;
@@ -79,7 +79,7 @@ public class POHDetourTask extends ReactiveTask {
         boolean portalFound = new ConditionalSleep(5000) {
             @Override
             public boolean condition() {
-                lunarPortal[0] = objects.closest("Lunar Isle Portal"); //TODO: set
+                lunarPortal[0] = objects.closest("Lunar Isle Portal");
                 return lunarPortal[0] != null;
             }
         }.sleep();
